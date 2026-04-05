@@ -4,7 +4,7 @@
 
 This project investigates whether internal representations in language models can be used to detect unfaithful or misleading reasoning.
 
-In particular, it focuses on cases where a model’s explanation does not accurately reflect the computation underlying its answer, and explores whether this discrepancy can be identified from hidden states.
+In particular, it focuses on cases where a model's explanation does not accurately reflect the computation underlying its answer, and explores whether this discrepancy can be identified from hidden states.
 
 ## Motivation
 
@@ -12,29 +12,65 @@ Models may generate explanations that appear plausible while not reflecting thei
 
 Being able to detect such unfaithful reasoning from internal representations could improve evaluation methods and help identify potential failure modes in advanced systems.
 
-## Current Approach
+## Pipeline
 
-The initial focus is on building a simple pipeline using small transformer models:
+```
+generate_data.py → run_model.py → score_outputs.py → extract_activations.py
+```
 
-1. Generate synthetic reasoning tasks (e.g. arithmetic problems)
-2. Prompt the model to produce both answers and explanations
-3. Compare outputs to ground truth to identify inconsistencies
-4. Extract hidden states from the model during generation
-5. Prepare data for probing internal representations
+1. **Generate data** — synthetic arithmetic problems with ground truth answers
+2. **Run model** — prompt GPT-2 to answer with explanations
+3. **Score outputs** — extract numeric answers, compare to ground truth, label correctness
+4. **Extract activations** — save final-layer hidden states for each example
 
-## Current Progress
+## Setup
 
-- Implemented task generation for simple reasoning problems  
-- Running GPT-2 to generate answers and explanations  
-- Extracting hidden states for each example  
-- Building dataset for analysis of reasoning behaviour  
+```bash
+pip install -r requirements.txt
+```
+
+## Usage
+
+Run the full pipeline end-to-end:
+
+```bash
+python src/generate_data.py --n 100
+python src/run_model.py
+python src/score_outputs.py
+python src/extract_activations.py
+```
+
+Outputs:
+- `data/raw/arithmetic.jsonl` — generated problems
+- `data/processed/model_outputs.jsonl` — model responses
+- `data/processed/scored_outputs.jsonl` — scored with correctness labels
+- `results/activations.npz` — hidden states (n_examples, hidden_dim) + labels
+
+## Project Structure
+
+```
+detecting-unfaithful-reasoning/
+├── src/
+│   ├── generate_data.py
+│   ├── run_model.py
+│   ├── score_outputs.py
+│   └── extract_activations.py
+├── data/
+│   ├── raw/
+│   └── processed/
+├── notebooks/
+│   └── exploration.ipynb
+├── results/
+├── requirements.txt
+└── .gitignore
+```
 
 ## Next Steps
 
-- Define more precise criteria for “unfaithful” reasoning  
-- Train simple probes on hidden states to detect behavioural differences  
-- Analyse which layers contain useful signals  
-- Extend to more complex tasks and models  
+- Train simple probes on hidden states to detect correctness from activations
+- Analyse which layers contain the most signal
+- Define more precise criteria for "unfaithful" reasoning
+- Extend to more complex tasks and models
 
 ## Notes
 
